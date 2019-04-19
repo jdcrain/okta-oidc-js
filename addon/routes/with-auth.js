@@ -12,6 +12,10 @@ export default Route.extend({
 
     const isAuthenticated = await authService.isAuthenticated();
     if (isAuthenticated) {
+      if (!authService.user) {
+        const user = await authService.getUser();
+        authService.set('user', user);
+      }
       return true;
     }
 

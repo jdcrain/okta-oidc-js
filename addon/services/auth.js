@@ -143,6 +143,9 @@ export default Service.extend({
       }
     });
 
+    const user = await this.getUser();
+    this.set('user', user);
+
     if (await this.isAuthenticated()) {
       this.set('authenticated', true);
     }
