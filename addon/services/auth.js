@@ -40,6 +40,11 @@ export default Service.extend({
 
     this.isAuthenticated().then(authenticated => {
       this.set('authenticated', authenticated);
+      if (!this.user) {
+        this.getUser().then(user => {
+          this.set('user', user);
+        });
+      }
     });
   },
 

@@ -1,5 +1,6 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
+import { Promise, hash } from 'rsvp';
 
 export default Route.extend({
   auth: service(),
@@ -10,41 +11,62 @@ export default Route.extend({
 
     const authService = this.auth;
 
-    const isAuthenticated = await authService.isAuthenticated();
-    if (isAuthenticated) {
-      if (!authService.user) {
-        const user = await authService.getUser();
-        authService.set('user', user);
-      }
-      return true;
-    }
+    const isAuthenticatedPromise = new Promise(function(resolve) {
+      authService.isAuthenticated().then(authenticated => {
+        resolve(authenticated);
+      });
+    });
 
-    let route;
+    const checkUserInfo = new Promise(function(resolve) {
+      isAuthenticatedPromise.then(authenticated => {
+        if (authenticated && !authService.user) {
+          authService.getUser().then(user => {
+            authService.set('user', user);
+            resolve(user);
+          });
+        } else {
+          resolve();
+        }
+      });
+    });
 
-    // Ember.js 3.6+
-    if (transition.to || this.router.currentRoute) {
-      route = transition.to || this.router.currentRoute;
-    } else {
-      route = transition;
-    }
+    return await hash({
+      isAuthenticated: isAuthenticatedPromise,
+      checkUser: checkUserInfo,
+      handleAuthenticated: isAuthenticatedPromise.then(authenticated => {
+        if (authenticated) {
+          return true;
+        }
 
-    // TODO: Save the model also? Could possibly use urlFor https://api.emberjs.com/ember/3.8/classes/RouterService/methods?anchor=urlFor
-    if (route) {
-      authService.setFromRoute(
-        route.name || route.targetName,
-        route.queryParams
-      );
-    } else {
-      authService.setFromRoute('/');
-    }
+        let route;
 
-    const onAuthRequired =
-      authService.getOktaConfig().onAuthRequired || authService.onAuthRequired;
+        // Ember.js 3.6+
+        if (transition.to || this.router.currentRoute) {
+          route = transition.to || this.router.currentRoute;
+        } else {
+          route = transition;
+        }
 
-    if (onAuthRequired) {
-      onAuthRequired(authService, this.router);
-    } else {
-      authService.loginRedirect();
-    }
+        // TODO: Save the model also? Could possibly use urlFor https://api.emberjs.com/ember/3.8/classes/RouterService/methods?anchor=urlFor
+        if (route) {
+          authService.setFromRoute(
+            route.name || route.targetName,
+            route.queryParams
+          );
+        } else {
+          authService.setFromRoute('/');
+        }
+
+        const onAuthRequired =
+          authService.getOktaConfig().onAuthRequired ||
+          authService.onAuthRequired;
+
+        if (onAuthRequired) {
+          onAuthRequired(authService, this.router);
+        } else {
+          authService.loginRedirect();
+        }
+      }),
+    });
   },
 });
