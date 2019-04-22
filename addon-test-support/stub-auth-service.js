@@ -17,6 +17,10 @@ let stubbedService = Service.extend({
   loginRedirect() {
     return 'loginRedirect';
   },
+
+  async getUser() {
+    return Promise.resolve({});
+  },
 });
 
 export function initAuthService(service) {
@@ -26,4 +30,18 @@ export function initAuthService(service) {
     service || stubbedService
   );
   return stubbedAuthService;
+}
+
+export function stubOktaAuthService(hooks = self) {
+  hooks.beforeEach(function() {
+    if (!this.owner) {
+      throw new Error(
+        'You must call one of the ember-qunit setupTest(),' +
+          ' setupRenderingTest() or setupApplicationTest() methods before' +
+          ' calling stubOktaAuthService()'
+      );
+    }
+
+    initAuthService();
+  });
 }
