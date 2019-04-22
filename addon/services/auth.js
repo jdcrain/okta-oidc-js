@@ -39,11 +39,19 @@ export default Service.extend({
     this.set('oktaConfig', oktaConfig);
 
     this.isAuthenticated().then(authenticated => {
-      this.set('authenticated', authenticated);
-      if (!this.user) {
-        this.getUser().then(user => {
-          this.set('user', user);
-        });
+      if (!this.isDestroying && !this.isDestroyed) {
+        this.set('authenticated', authenticated);
+        if (!this.user) {
+          this.getUser().then(user => {
+            if (!this.isDestroying && !this.isDestroyed) {
+              this.set('user', user);
+            } else {
+              return;
+            }
+          });
+        }
+      } else {
+        return;
       }
     });
   },

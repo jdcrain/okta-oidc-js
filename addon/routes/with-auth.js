@@ -21,8 +21,15 @@ export default Route.extend({
       isAuthenticatedPromise.then(authenticated => {
         if (authenticated && !authService.user) {
           authService.getUser().then(user => {
-            authService.set('user', user);
-            resolve(user);
+            if (
+              !authService.get('isDestroyed') &&
+              !authService.get('isDestroying')
+            ) {
+              authService.set('user', user);
+              resolve(user);
+            } else {
+              resolve();
+            }
           });
         } else {
           resolve();
