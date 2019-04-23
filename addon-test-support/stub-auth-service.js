@@ -1,5 +1,6 @@
 import { getContext } from '@ember/test-helpers';
 import Service from '@ember/service';
+import { Promise } from 'rsvp';
 
 let stubbedService = Service.extend({
   init() {

@@ -9,6 +9,7 @@ import {
 import * as OktaAuth from '@okta/okta-auth-js';
 import Ember from 'ember';
 import { inject as service } from '@ember/service';
+import { assign } from '@ember/polyfills';
 
 export default Service.extend({
   router: service(),
@@ -31,7 +32,7 @@ export default Service.extend({
 
     this.set('oktaAuth', oktaAuth);
 
-    const oktaConfig = Object.assign({}, config.okta);
+    const oktaConfig = assign({}, config.okta);
 
     const scope = this.checkScope(oktaConfig.scope);
 
